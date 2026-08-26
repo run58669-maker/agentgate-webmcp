@@ -16,6 +16,17 @@ gate.tool({ name: "save_draft", risk: "write", inputSchema, execute });
 gate.tool({ name: "submit_application", risk: "irreversible", inputSchema, execute });
 ```
 
+## Why a site owner would install this
+We used this exact protocol to ship this submission — and every third-party site we touched today (Devpost, YouTube) had none of it, so we fell back to the old way: dump every button, guess, click an `<input>` that ignores clicks until you hit its `<label>`, sleep, re-read the page. That is what agent traffic looks like to a site today: brittle scrapers that break on the next redesign, retry blindly, and sometimes fire the irreversible button.
+
+AgentGate is the cheap alternative for the site owner:
+- **Three lines, no rewrite.** Wrap the handlers you already have. Nothing changes for human visitors.
+- **You decide what agents may do.** `risk: "irreversible"` means no agent can submit, pay, or delete without a person on your page clicking Confirm — the site enforces it, not the agent's good manners.
+- **Fewer support tickets.** Structured receipts and field-level errors mean agents fix their own mistakes instead of retrying, and `describe_page` means they stop clicking things at random.
+- **Ready gating protects your backend.** `NOT_READY` + `retry_after_ms` replaces the hammering that "sleep and retry" agents do today.
+
+It also **dogfoods**: after building it, the author-agent (Claude) drove the demo site end-to-end purely from receipts — and immediately found a gap (a required field the demo silently accepted), which is now a field-level error in the demo and a step in the video.
+
 ## What's in this repo
 
 - `packages/agentgate/` — the zero-runtime-dependency library. ESM + `<script>`-tag IIFE build,
