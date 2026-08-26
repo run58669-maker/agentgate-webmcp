@@ -1,0 +1,15 @@
+{
+  "name": "webmcp-agentgate",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=agentgate && npm run build --workspace=demo",
+    "test": "npm run test --workspace=agentgate",
+    "dev": "npm run dev --workspace=demo"
+  }
+}
