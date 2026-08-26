@@ -1,11 +1,8 @@
 # Devpost submission draft — AgentGate
 
-**Live URL:** _TODO — not yet deployed; see BUILD_REPORT.md "Unresolved" for what's needed (a free
-static host such as Cloudflare Pages/Netlify/GitHub Pages, pointed at `apps/demo/dist` — the build
-itself is done and verified)._
-**Repo:** `https://github.com/run58669-maker/<repo-name>` _(public, MIT-licensed — confirm repo
-name/visibility before submitting)_
-**Video:** _TODO — see video/SCRIPT.md; not yet recorded._
+**Live URL:** https://run58669-maker.github.io/agentgate-webmcp/ (GitHub Pages, verified HTTP 200 + 8 tools visible via document.modelContext.getTools() in Chrome with WebMCP enabled)
+**Repo:** https://github.com/run58669-maker/agentgate-webmcp (public, MIT)
+**Video:** _YouTube link TBD — video/agentgate_demo.mp4 rendered, upload pending._
 
 ---
 
@@ -16,8 +13,7 @@ them. But every non-trivial real product built on top of that immediately needs 
 things: a map of what's on the page and what state it's in, a reliable way to know if a call
 succeeded, a way to mark some actions as more dangerous than others, a way to put a human in the
 loop before an irreversible action fires, and a way to say "not yet" instead of racing async
-content. WebMCP itself has an open issue for the human-confirmation problem (#165/#50 — "user
-prompting and elicitation") and doesn't specify any of the other four. AgentGate is a direct,
+content. WebMCP itself has an open issue for the human-confirmation problem (#165 "Human in the Loop support" / #50 "Handling multiple elicitation requests", both open) and doesn't specify any of the other four. AgentGate is a direct,
 minimal-surface-area answer to those five gaps, built entirely on `registerTool()`/`execute()` —
 it doesn't fork or reimplement WebMCP, it wraps it. That's the deepest kind of "WebMCP leverage": we
 don't just call `registerTool()` once for a toy button, we use it as the substrate for a full
