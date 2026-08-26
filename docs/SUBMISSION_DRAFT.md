@@ -2,7 +2,7 @@
 
 **Live URL:** https://run58669-maker.github.io/agentgate-webmcp/ (GitHub Pages, verified HTTP 200 + 8 tools visible via document.modelContext.getTools() in Chrome with WebMCP enabled)
 **Repo:** https://github.com/run58669-maker/agentgate-webmcp (public, MIT)
-**Video:** https://www.youtube.com/watch?v=EmpHneJSSlw (public, 2:24)
+**Video:** https://www.youtube.com/watch?v=KyUvS32f3Fs (public, 2:34, v3 — live agent over CDP; v2 EmpHneJSSlw kept)
 
 ---
 
