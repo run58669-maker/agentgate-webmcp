@@ -57,9 +57,15 @@ export function saveProfile(state: AppState, input: { fullName?: string; bio?: s
   if (!orgType) {
     errors.push({ field: "orgType", code: "REQUIRED", message: "Select an organization type first (see set_org_type)." });
   }
+  const bio = input?.bio?.trim() ?? "";
+  if (!bio) {
+    errors.push({ field: "bio", code: "REQUIRED", message: "A short bio is required." });
+  } else if (bio.length < 20) {
+    errors.push({ field: "bio", code: "TOO_SHORT", message: `Bio must be at least 20 characters (got ${bio.length}).` });
+  }
   if (errors.length) return { ok: false, errors };
 
-  state.profile = { fullName: fullName!, orgType, bio: input?.bio?.trim() ?? "" };
+  state.profile = { fullName: fullName!, orgType, bio };
   if (state.step < 3) state.step = 3;
   return { ok: true, state: { step: state.step, profile: state.profile }, next: ["upload_file"] };
 }

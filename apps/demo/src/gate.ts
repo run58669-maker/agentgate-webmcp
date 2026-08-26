@@ -48,7 +48,7 @@ export function wireAgentGate(state: AppState, whoami: () => string | null, rere
 
   gate.tool({
     name: "save_profile",
-    description: "Saves the applicant's full name and bio. Call set_org_type first. Step 2 of 5.",
+    description: "Saves the applicant's full name and a short bio (min 20 characters). Call set_org_type first. Validation failures come back as field-level errors. Step 2 of 5.",
     risk: "write",
     inputSchema: {
       type: "object",
@@ -56,7 +56,7 @@ export function wireAgentGate(state: AppState, whoami: () => string | null, rere
         fullName: { type: "string" },
         bio: { type: "string" },
       },
-      required: ["fullName"],
+      required: ["fullName", "bio"],
     },
     execute: (input: { fullName?: string; bio?: string }) => {
       const r = logic.saveProfile(state, input);
