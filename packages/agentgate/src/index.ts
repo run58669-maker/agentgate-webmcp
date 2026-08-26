@@ -31,6 +31,7 @@ const DEFAULT_HUMAN_TOKEN_TTL_MS = 5 * 60 * 1000; // 5 minutes, per SPEC.md capa
 interface RegistryEntry {
   def: ToolDef;
   controller: AbortController;
+  wrappedExecute: (input: any, ctx: ToolExecuteContext) => Promise<Receipt & { content: { type: "text"; text: string }[] }>;
 }
 
 /**
@@ -189,7 +190,6 @@ export class AgentGate {
     }
 
     const controller = new AbortController();
-    this.registry.set(def.name, { def, controller });
 
     const wrappedExecute = async (input: any, ctx: ToolExecuteContext) => {
       try {
@@ -235,6 +235,8 @@ export class AgentGate {
         );
       }
     };
+
+    this.registry.set(def.name, { def, controller, wrappedExecute });
 
     const inputSchema = augmentSchemaForRisk(def.inputSchema, def.risk);
 
@@ -300,6 +302,26 @@ export class AgentGate {
   /** Whether a real WebMCP implementation (document.modelContext or navigator.modelContext) was found. */
   hasNativeWebMCP(): boolean {
     return this.mc !== null;
+  }
+
+  /**
+   * Invokes a registered tool's exact wrapped execute path (ready gating, risk/token checks,
+   * receipt normalization) directly, bypassing the browser's WebMCP mediation. This is the same
+   * code that a real browser agent triggers via `document.modelContext.executeTool()` — useful for
+   * driving tools from an in-page "agent console" or from tests/tooling that don't have a live
+   * WebMCP host (e.g. no chrome://flags/#enable-webmcp-testing available).
+   */
+  async callTool(name: string, input: any = {}): Promise<Receipt> {
+    const entry = this.registry.get(name);
+    if (!entry) {
+      return normalizeReceipt({
+        ok: false,
+        errors: [{ field: "name", code: "UNKNOWN_TOOL", message: `No tool named "${name}" is registered.` }],
+      });
+    }
+    const controller = new AbortController();
+    const { content: _content, ...receipt } = await entry.wrappedExecute(input, { signal: controller.signal });
+    return receipt as Receipt;
   }
 }
 

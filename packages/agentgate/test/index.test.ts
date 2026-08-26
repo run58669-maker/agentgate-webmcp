@@ -338,3 +338,25 @@ describe("tool lifecycle & onToolChange", () => {
     expect(cb.mock.calls.length).toBe(before + 3);
   });
 });
+
+describe("callTool (direct-execute driver, no native WebMCP host required)", () => {
+  it("runs the exact same wrapped execute path as a real modelContext call", async () => {
+    uninstallMockModelContext();
+    const gate = AgentGate.init({ app: "A" });
+    gate.tool({ name: "echo", description: "x", risk: "read", execute: (input: any) => ({ ok: true, data: input }) });
+    const notReady = await gate.callTool("echo", { hi: 1 });
+    expect(notReady.code).toBe("NOT_READY");
+
+    gate.ready();
+    const receipt = await gate.callTool("echo", { hi: 1 });
+    expect(receipt).toMatchObject({ ok: true, data: { hi: 1 } });
+    expect((receipt as any).content).toBeUndefined();
+  });
+
+  it("returns an UNKNOWN_TOOL error receipt for a name that was never registered", async () => {
+    const gate = AgentGate.init({ app: "A" });
+    const receipt = await gate.callTool("nope");
+    expect(receipt.ok).toBe(false);
+    expect(receipt.errors[0].code).toBe("UNKNOWN_TOOL");
+  });
+});
