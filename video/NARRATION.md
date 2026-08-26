@@ -5,6 +5,13 @@ section, mixed under the matching video segment. Each video segment's length is 
 section's actual WAV duration (see `video/BUILD_VIDEO_REPORT.md` for the measured numbers /
 ffprobe output).
 
+**Revision 3 note:** the "after" section's calls are made live — see `video/BUILD_VIDEO_REPORT.md`
+Revision 3 for exactly how. The calls you see are made live by an AI agent (Claude), choosing
+each step from the previous receipt, over the Chrome DevTools Protocol, calling the real
+`document.modelContext.getTools()` / `executeTool()` WebMCP API directly — not by clicking the
+demo's pre-scripted "Agent console" buttons (which stay visible, unclicked, on the right of the
+page for contrast).
+
 ## 1. Title (title.wav — 3.96s)
 
 > AgentGate. Make your web page talk to agents.
@@ -19,18 +26,18 @@ ffprobe output).
 > model context. Submit, and you get a plain text toast. No confirmation, nothing structured,
 > nothing an agent can parse.
 
-## 3. After / AgentGate on (after.wav — 60.14s)
+## 3. After / AgentGate on, driven live by a real agent over CDP (after.wav — 69.99s)
 
-> Same page, AgentGate on. Eight tools are registered through the real document dot model context
-> A P I, each tagged read, write, or irreversible. Call describe_page and you get a receipt back,
-> not a guess; full tool list, current state, what's next. While the session loads, gated tools
-> return not ready with a retry time instead of failing silently. Upload a file: the scan is
-> running, so upload_file returns not ready with a retry_after_ms. Poll again, it flips to ok
-> true. Now the irreversible one; call submit_application directly and AgentGate blocks it: human
-> required. Call request_human, and a real confirmation panel opens on the page, showing the
-> action and reason. A human clicks Confirm, not the agent, and that mints a single use token.
-> Replay submit_application with that token; ok true, application submitted. Compare that to the
-> bare dom toast from a minute ago.
+> Same page, AgentGate on. The calls you see are made live by an A I agent, Claude, over the
+> Chrome DevTools Protocol, calling the real document dot model context A P I directly and
+> choosing each step from the previous receipt. get_tools returns eight real tools, tagged read,
+> write, or irreversible. describe_page returns a receipt, not a guess. create_account, then
+> set_org_type, then save_profile: ok false, bio is required; fixed, it succeeds. upload_file:
+> scan running, not ready with a retry_after_ms; the agent waits, polls again, ok true.
+> get_application_summary returns the full application as structured JSON. submit_application,
+> called directly, comes back human required. request_human opens a real confirmation panel on
+> the page. A human clicks Confirm, not the agent, minting a single use token. Replayed with that
+> token: ok true, application submitted. Compare that to the bare dom toast from a minute ago.
 
 ## 4. Protocol (protocol.wav — 22.80s)
 
@@ -44,5 +51,5 @@ ffprobe output).
 > For a developer it's three lines: init AgentGate, register a tool with a risk level, done. Zero
 > dependency, M I T licensed, full test suite against WebMCP. Repo and live demo linked below.
 
-Total narration: ~140.96s. Final video runtime target: ≤ 2:50 (170s); actual assembled runtime
+Total narration: ~150.81s. Final video runtime target: ≤ 2:50 (170s); actual assembled runtime
 is reported in `video/BUILD_VIDEO_REPORT.md`.
