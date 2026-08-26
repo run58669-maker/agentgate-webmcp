@@ -91,6 +91,7 @@ describe("ready gating", () => {
     expect(receipt.ok).toBe(false);
     expect(receipt.code).toBe("NOT_READY");
     expect(receipt.retry_after_ms).toBeGreaterThan(0);
+    expect(receipt.next).toEqual(["read_status"]);
   });
 
   it("returns NOT_READY for a write tool before ready() too", async () => {
@@ -147,12 +148,17 @@ describe("structured receipts", () => {
       execute: (input: any) =>
         input.email
           ? { ok: true }
-          : { ok: false, errors: [{ field: "email", code: "REQUIRED", message: "Email is required" }] },
+          : {
+              ok: false,
+              errors: [{ field: "email", code: "REQUIRED", message: "Email is required" }],
+              next: ["validate_form"],
+            },
     });
     gate.ready();
     const receipt = parseReceipt(await getMockedExecute(mc, "validate_form")({}));
     expect(receipt.ok).toBe(false);
     expect(receipt.errors).toEqual([{ field: "email", code: "REQUIRED", message: "Email is required" }]);
+    expect(receipt.next).toEqual(["validate_form"]);
   });
 
   it("catches a thrown error from the tool author and returns an EXCEPTION receipt", async () => {

@@ -27,11 +27,11 @@ export function createAccount(state: AppState, input: { username?: string; email
   if (!email || !email.includes("@")) {
     errors.push({ field: "email", code: "INVALID_FORMAT", message: "Enter a valid email address." });
   }
-  if (errors.length) return { ok: false, errors };
+  if (errors.length) return { ok: false, errors, next: ["create_account"] };
 
   state.account = { username: username!, email: email! };
   if (state.step < 2) state.step = 2;
-  return { ok: true, state: { step: state.step, account: state.account }, next: ["set_org_type", "save_profile"] };
+  return { ok: true, state: { step: state.step, account: state.account }, next: ["set_org_type"] };
 }
 
 export function setOrgType(state: AppState, input: { orgType?: string }): LogicReceipt {
@@ -40,11 +40,12 @@ export function setOrgType(state: AppState, input: { orgType?: string }): LogicR
     return {
       ok: false,
       errors: [{ field: "orgType", code: "INVALID_VALUE", message: `orgType must be one of: ${ORG_TYPES.join(", ")}` }],
+      next: ["set_org_type"],
     };
   }
   state.profile = state.profile ?? { fullName: "", orgType: null, bio: "" };
   state.profile.orgType = orgType;
-  return { ok: true, state: { profile: state.profile }, next: ["save_profile"] };
+  return { ok: true, state: { orgType }, next: ["save_profile"] };
 }
 
 export function saveProfile(state: AppState, input: { fullName?: string; bio?: string }): LogicReceipt {
@@ -63,7 +64,9 @@ export function saveProfile(state: AppState, input: { fullName?: string; bio?: s
   } else if (bio.length < 20) {
     errors.push({ field: "bio", code: "TOO_SHORT", message: `Bio must be at least 20 characters (got ${bio.length}).` });
   }
-  if (errors.length) return { ok: false, errors };
+  if (errors.length) {
+    return { ok: false, errors, next: orgType ? ["save_profile"] : ["set_org_type"] };
+  }
 
   state.profile = { fullName: fullName!, orgType, bio };
   if (state.step < 3) state.step = 3;
@@ -73,7 +76,11 @@ export function saveProfile(state: AppState, input: { fullName?: string; bio?: s
 export function uploadFile(state: AppState, input: { fileName?: string }): LogicReceipt {
   const fileName = input?.fileName?.trim();
   if (!fileName) {
-    return { ok: false, errors: [{ field: "fileName", code: "REQUIRED", message: "fileName is required." }] };
+    return {
+      ok: false,
+      errors: [{ field: "fileName", code: "REQUIRED", message: "fileName is required." }],
+      next: ["upload_file"],
+    };
   }
 
   if (!state.upload || state.upload.fileName !== fileName) {
@@ -88,6 +95,7 @@ export function uploadFile(state: AppState, input: { fileName?: string }): Logic
       retry_after_ms: Math.max(50, UPLOAD_SCAN_MS - elapsed),
       state: { scanning: true, fileName },
       errors: [{ field: "_", code: "NOT_READY", message: "File is still being scanned." }],
+      next: ["upload_file"],
     };
   }
 
@@ -103,7 +111,9 @@ export function getApplicationSummary(state: AppState): LogicReceipt {
     data: {
       account: state.account,
       profile: state.profile,
-      upload: state.upload,
+      upload: state.upload
+        ? { fileName: state.upload.fileName, scanning: state.upload.scanning }
+        : null,
     },
     next: state.step >= 4 ? ["submit_application"] : [],
   };
@@ -118,7 +128,14 @@ export function submitApplication(state: AppState): LogicReceipt {
   if (!state.upload || state.upload.scanning) {
     errors.push({ field: "upload", code: "MISSING", message: "Upload and finish scanning a file first." });
   }
-  if (errors.length) return { ok: false, errors };
+  if (errors.length) {
+    const next = !state.account
+      ? ["create_account"]
+      : !state.profile?.fullName || !state.profile?.orgType
+        ? ["set_org_type", "save_profile"]
+        : ["upload_file"];
+    return { ok: false, errors, next };
+  }
 
   state.submitted = true;
   state.step = 5;

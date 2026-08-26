@@ -38,6 +38,12 @@ converted into `{ok:false, errors:[{code:"EXCEPTION", message}]}` rather than pr
 unhandled rejection. Replaces `sleep()` + re-read `innerText` to guess whether a submit worked, and
 gives a field name for every validation error instead of a generic "Please answer this question."
 
+For a recoverable failure, `next` names the tool to call after correcting the input. A validation
+failure from `save_profile` therefore returns `next:["save_profile"]`; a `NOT_READY` result returns
+the polling tool itself. AgentGate adds this automatically for its page-wide ready gate. App tools
+must include it for their own validation and async receipts. This keeps the recovery path entirely
+inside the receipt instead of forcing the agent to reconstruct it from prose.
+
 ## 3. Risk tiers
 
 Every tool is registered with `risk: "read" | "write" | "irreversible"`. AgentGate maps this onto
@@ -72,7 +78,7 @@ minutes by default (`humanTokenTtlMs` option). The agent replays the original to
 `describe_page`/`request_human` tools) checks readiness first and short-circuits with:
 
 ```json
-{ "ok": false, "code": "NOT_READY", "retry_after_ms": 500 }
+{ "ok": false, "code": "NOT_READY", "retry_after_ms": 500, "next": ["the_tool_called"] }
 ```
 
 until the app calls `gate.ready()`. `retry_after_ms` is configurable via `notReadyRetryMs`. Because

@@ -200,6 +200,7 @@ export class AgentGate {
               code: "NOT_READY",
               retry_after_ms: this.notReadyRetryMs,
               errors: [{ field: "_", code: "NOT_READY", message: "The page has not signalled ready() yet." }],
+              next: [def.name],
             })
           );
         }
